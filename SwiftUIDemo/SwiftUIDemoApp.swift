@@ -39,6 +39,11 @@ struct MainTabView: View {
                 .tabItem {
                     Label("转盘抽奖", systemImage: "circle.fill")
                 }
+            
+            SudokuView()
+                .tabItem {
+                    Label("数独", systemImage: "square.grid.3x3.fill")
+                }
         }
     }
 }
