@@ -15,48 +15,129 @@ struct TetrisView: View {
                     // 游戏信息
                     GameInfoView(gameModel: gameModel)
                     
-                    // 游戏区域
-                    TetrisGameView(gameModel: gameModel)
-                        .frame(maxWidth: .infinity)
-                        .aspectRatio(CGFloat(gameModel.width) / CGFloat(gameModel.height), contentMode: .fit)
-                        .background(Color(.systemGray6))
-                        .cornerRadius(10)
-                        .shadow(radius: 5)
-                        .padding(.horizontal)
-                    
-                    HStack {
-                        // 下一个方块预览
-                        NextBlockView(block: gameModel.nextBlock, cellSize: 20)
-                            .padding(.horizontal)
+                    // 游戏区域和控制区布局
+                    HStack(alignment: .top, spacing: 10) {
+                        // 游戏区域
+                        TetrisGameView(gameModel: gameModel)
+                            .frame(maxWidth: .infinity)
+                            .aspectRatio(CGFloat(gameModel.width) / CGFloat(gameModel.height), contentMode: .fit)
+                            .background(Color(.systemGray6))
+                            .cornerRadius(10)
+                            .shadow(radius: 5)
                         
-                        Spacer()
-                        
-                        // 游戏控制按钮
-                        if gameModel.state == .playing {
-                            HStack(spacing: 15) {
-                                // 暂停按钮
+                        // 侧边控制区
+                        VStack(spacing: 20) {
+                            // 下一个方块预览
+                            NextBlockView(block: gameModel.nextBlock, cellSize: 15)
+                                .padding(.top, 10)
+                            
+                            // 游戏控制按钮
+                            if gameModel.state == .playing {
                                 Button(action: { gameModel.togglePause() }) {
-                                    Image(systemName: "pause.fill")
-                                        .font(.title2)
-                                        .foregroundColor(.white)
-                                        .frame(width: 40, height: 40)
-                                        .background(Circle().fill(Color.orange))
+                                    VStack {
+                                        Image(systemName: "pause.fill")
+                                            .font(.title2)
+                                            .foregroundColor(.white)
+                                            .frame(width: 40, height: 40)
+                                            .background(Circle().fill(Color.orange))
+                                    }
                                 }
                                 
-                                // 重置按钮
                                 Button(action: { gameModel.startGame() }) {
-                                    Image(systemName: "arrow.counterclockwise")
-                                        .font(.title2)
-                                        .foregroundColor(.white)
-                                        .frame(width: 40, height: 40)
-                                        .background(Circle().fill(Color.red))
+                                    VStack {
+                                        Image(systemName: "arrow.counterclockwise")
+                                            .font(.title2)
+                                            .foregroundColor(.white)
+                                            .frame(width: 40, height: 40)
+                                            .background(Circle().fill(Color.red))
+                                    }
                                 }
                             }
-                            .padding(.horizontal)
+                            
+                            Spacer()
                         }
+                        .frame(width: 80)
                     }
+                    .padding(.horizontal)
                     
-                    if gameModel.state != .playing {
+                    // 方向控制按钮（类似游戏机）
+                    if gameModel.state == .playing {
+                        VStack(spacing: 10) {
+                            // 旋转按钮
+                            HStack {
+                                Spacer()
+                                
+                                Button(action: { gameModel.rotate() }) {
+                                    ZStack {
+                                        Circle()
+                                            .fill(Color.green)
+                                            .frame(width: 60, height: 60)
+                                            .shadow(radius: 3)
+                                        
+                                        Image(systemName: "arrow.2.squarepath")
+                                            .font(.title)
+                                            .foregroundColor(.white)
+                                    }
+                                }
+                                .buttonStyle(GameButtonStyle())
+                                
+                                Spacer()
+                            }
+                            
+                            // 左右下移动按钮
+                            HStack(spacing: 30) {
+                                // 左移按钮
+                                Button(action: { gameModel.moveLeft() }) {
+                                    DirectionButtonView(direction: "left")
+                                }
+                                .buttonStyle(GameButtonStyle())
+                                
+                                // 下移按钮
+                                Button(action: { 
+                                    // 长按时硬着陆，短按时软下落
+                                    gameModel.softDrop() 
+                                }) {
+                                    DirectionButtonView(direction: "down")
+                                }
+                                .buttonStyle(GameButtonStyle())
+                                .simultaneousGesture(
+                                    LongPressGesture(minimumDuration: 0.5)
+                                        .onEnded { _ in
+                                            gameModel.hardDrop()
+                                        }
+                                )
+                                
+                                // 右移按钮
+                                Button(action: { gameModel.moveRight() }) {
+                                    DirectionButtonView(direction: "right")
+                                }
+                                .buttonStyle(GameButtonStyle())
+                            }
+                            .padding(.vertical, 10)
+                            
+                            // 硬下落按钮
+                            Button(action: { gameModel.hardDrop() }) {
+                                Text("硬着陆")
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 30)
+                                    .padding(.vertical, 12)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .fill(Color.red)
+                                    )
+                                    .shadow(radius: 2)
+                            }
+                            .buttonStyle(GameButtonStyle())
+                        }
+                        .padding(.vertical, 10)
+                        .padding(.horizontal)
+                        .background(
+                            RoundedRectangle(cornerRadius: 15)
+                                .fill(Color.black.opacity(0.1))
+                        )
+                        .padding(.horizontal)
+                    } else {
                         // 开始按钮（仅在非游戏中状态显示）
                         Button(action: {
                             if gameModel.state == .paused {
@@ -77,23 +158,28 @@ struct TetrisView: View {
                                 )
                         }
                         .padding(.top, 10)
-                    } else {
-                        // 控制说明（仅在游戏中状态显示）
-                        VStack(alignment: .leading, spacing: 5) {
-                            Text("操作说明:")
-                                .font(.subheadline)
-                                .fontWeight(.medium)
-                            Text("• 点击: 旋转")
-                                .font(.caption)
-                            Text("• 左/右滑动: 移动方块")
-                                .font(.caption)
-                            Text("• 下滑: 加速下落")
-                                .font(.caption)
-                            Text("• 长按: 快速下落")
-                                .font(.caption)
+                    }
+                    
+                    // 控制说明（仅在游戏中状态显示）
+                    if gameModel.state == .playing {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 5) {
+                                Text("触屏控制:")
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                                Text("• 点击: 旋转")
+                                    .font(.caption)
+                                Text("• 左/右滑动: 移动方块")
+                                    .font(.caption)
+                                Text("• 下滑: 加速下落")
+                                    .font(.caption)
+                                Text("• 长按: 快速下落")
+                                    .font(.caption)
+                            }
+                            
+                            Spacer()
                         }
                         .padding()
-                        .frame(maxWidth: .infinity, alignment: .leading)
                         .background(
                             RoundedRectangle(cornerRadius: 10)
                                 .fill(Color(.systemGray5))
@@ -121,6 +207,34 @@ struct TetrisView: View {
             startPoint: .top,
             endPoint: .bottom
         )
+    }
+}
+
+// 游戏按钮样式
+struct GameButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
+            .opacity(configuration.isPressed ? 0.9 : 1.0)
+            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
+    }
+}
+
+// 方向按钮视图
+struct DirectionButtonView: View {
+    let direction: String // "left", "right", "down"
+    
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(Color.blue)
+                .frame(width: 70, height: 70)
+                .shadow(radius: 3)
+            
+            Image(systemName: "arrow.\(direction)")
+                .font(.title)
+                .foregroundColor(.white)
+        }
     }
 }
 
@@ -155,7 +269,7 @@ struct NextBlockView: View {
     
     var body: some View {
         VStack(spacing: 5) {
-            Text("下一个方块")
+            Text("下一个")
                 .font(.headline)
             
             ZStack {
@@ -180,7 +294,11 @@ struct NextBlockView: View {
                                 Rectangle()
                                     .fill(block.type.color)
                                     .frame(width: cellSize, height: cellSize)
-                                    .border(Color.white.opacity(0.2), width: 1)
+                                    .overlay(
+                                        Rectangle()
+                                            .stroke(lineWidth: 0.5)
+                                            .foregroundColor(Color.black.opacity(0.3))
+                                    )
                                     .position(
                                         x: CGFloat(j) * cellSize + (6 - CGFloat(blockWidth)) * cellSize / 2,
                                         y: CGFloat(i) * cellSize + (6 - CGFloat(blockHeight)) * cellSize / 2

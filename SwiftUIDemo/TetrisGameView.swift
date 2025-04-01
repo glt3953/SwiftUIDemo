@@ -80,21 +80,8 @@ struct TetrisGameView: View {
                         gameModel.rotate()
                     }
             )
-            .gesture(
-                // 双击手势用于硬着陆（快速下落）
-                LongPressGesture(minimumDuration: 0.3)
-                    .onEnded { _ in
-                        // 仅在游戏进行中才响应手势
-                        guard gameModel.state == .playing else { return }
-                        gameModel.hardDrop()
-                    }
-            )
         }
         .aspectRatio(CGFloat(gameModel.width) / CGFloat(gameModel.height), contentMode: .fit)
-        .onAppear {
-            // 初始化键盘事件监听（在macOS或带键盘的设备上有用）
-            setupKeyboardControls()
-        }
     }
     
     // 游戏状态覆盖视图
@@ -107,7 +94,7 @@ struct TetrisGameView: View {
                     gameModel.startGame()
                 }) {
                     VStack {
-                        Text("开始游戏")
+                        Text("点击开始")
                             .font(.title)
                             .fontWeight(.bold)
                             .foregroundColor(.white)
@@ -123,19 +110,6 @@ struct TetrisGameView: View {
                         .font(.title)
                         .fontWeight(.bold)
                         .foregroundColor(.white)
-                    
-                    Button(action: {
-                        gameModel.togglePause()
-                    }) {
-                        Text("继续")
-                            .font(.headline)
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                            .padding()
-                            .background(Color.blue)
-                            .cornerRadius(10)
-                    }
-                    .padding(.top)
                 }
                 
             case .gameOver:
@@ -149,18 +123,6 @@ struct TetrisGameView: View {
                         .font(.headline)
                         .foregroundColor(.white)
                         .padding(.bottom)
-                    
-                    Button(action: {
-                        gameModel.startGame()
-                    }) {
-                        Text("再来一局")
-                            .font(.headline)
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                            .padding()
-                            .background(Color.blue)
-                            .cornerRadius(10)
-                    }
                 }
                 
             default:
@@ -185,14 +147,5 @@ struct TetrisGameView: View {
         let heightConstrained = height / CGFloat(gameModel.height)
         
         return min(widthConstrained, heightConstrained)
-    }
-    
-    // 设置键盘控制
-    private func setupKeyboardControls() {
-        // 注：这部分功能在iOS上实现较为复杂，通常使用UIKit桥接
-        // 此处仅作为注释示意，实际开发需要针对UIKit或AppKit进行适配
-        
-        // 在真实实现中，可以使用 NotificationCenter 或自定义的键盘事件监听
-        // 例如：左右箭头控制移动，上箭头旋转，下箭头加速下落，空格键硬着陆
     }
 } 
