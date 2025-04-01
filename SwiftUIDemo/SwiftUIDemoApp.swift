@@ -25,8 +25,25 @@ struct SwiftUIDemoApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MainTabView()
         }
         .modelContainer(sharedModelContainer)
+    }
+}
+
+// 主标签视图
+struct MainTabView: View {
+    var body: some View {
+        TabView {
+            ContentView()
+                .tabItem {
+                    Label("示例", systemImage: "list.dash")
+                }
+            
+            TetrisView()
+                .tabItem {
+                    Label("俄罗斯方块", systemImage: "gamecontroller")
+                }
+        }
     }
 }
