@@ -44,6 +44,11 @@ struct MainTabView: View {
                 .tabItem {
                     Label("俄罗斯方块", systemImage: "gamecontroller")
                 }
+            
+            LuckyWheelView()
+                .tabItem {
+                    Label("转盘抽奖", systemImage: "circle.fill")
+                }
         }
     }
 }
