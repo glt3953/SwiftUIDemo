@@ -14,6 +14,7 @@ struct SudokuView: View {
     @State private var selectedCell: (row: Int, col: Int)? = nil
     @State private var showError = false
     @State private var errorMessage = ""
+    @State private var showHelpSheet = false
     
     // 格子大小
     private let cellSize: CGFloat = min(UIScreen.main.bounds.width, UIScreen.main.bounds.height) / 9 - 4
@@ -177,12 +178,24 @@ struct SudokuView: View {
             }
             .navigationTitle("数独游戏")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: {
+                        showHelpSheet = true
+                    }) {
+                        Image(systemName: "questionmark.circle")
+                    }
+                }
+            }
             .alert(isPresented: $showError) {
                 Alert(
                     title: Text("提示"),
                     message: Text(errorMessage),
                     dismissButton: .default(Text("确定"))
                 )
+            }
+            .sheet(isPresented: $showHelpSheet) {
+                SudokuHelpView()
             }
         }
     }

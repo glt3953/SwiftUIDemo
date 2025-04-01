@@ -58,7 +58,7 @@ struct ContentView: View {
 
     private func addItem() {
         withAnimation {
-            let newItem = Item.createWith(timestamp: Date(), in: viewContext)
+            _ = Item.createWith(timestamp: Date(), in: viewContext)
             
             do {
                 try viewContext.save()
