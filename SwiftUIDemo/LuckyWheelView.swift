@@ -64,7 +64,7 @@ struct LuckyWheelView: View {
         isSpinning = true
         
         // 随机抽奖，根据概率确定结果
-        let randomValue = Double.random(in: 0..<360)
+        let randomValue = Double.random(in: 0..<360) // 修改为0..<360避免边界值问题
         var currentAngle: Double = 0
         var selectedIndex = 0
         
@@ -74,6 +74,15 @@ struct LuckyWheelView: View {
                 break
             }
             currentAngle += angle
+        }
+        
+        // 确保总是能找到一个奖项，即使在边界情况下
+        if selectedIndex == 0 && randomValue >= 360 {
+            // 如果随机值超过360度，则选择第一个奖项
+            selectedIndex = 0
+        } else if selectedIndex == 0 && randomValue >= currentAngle {
+            // 如果循环结束后没有找到匹配项，则选择最后一个奖项
+            selectedIndex = prizeAngles.count - 1
         }
         
         result = prizes[selectedIndex]
@@ -88,6 +97,7 @@ struct LuckyWheelView: View {
         
         // 基础旋转5圈，然后加上额外的角度指向特定奖项
         // 由于指针在顶部，需要调整角度计算
+        // 确保指针停在奖项中心位置
         let targetAngle = 360.0 * 5 + (360 - centerAngle)
         
         withAnimation(.easeInOut(duration: 3)) {
@@ -157,10 +167,11 @@ struct PrizeSlice: View {
     var body: some View {
         GeometryReader { geometry in
             ZStack {
+                let radius = min(geometry.size.width, geometry.size.height) / 2
+                
                 // 绘制扇形
                 Path { path in
                     let center = CGPoint(x: geometry.size.width / 2, y: geometry.size.height / 2)
-                    let radius = min(geometry.size.width, geometry.size.height) / 2
                     
                     path.move(to: center)
                     path.addArc(center: center, radius: radius, startAngle: startAngle, endAngle: endAngle, clockwise: false)
@@ -172,9 +183,8 @@ struct PrizeSlice: View {
                 Text(text)
                     .font(.headline)
                     .foregroundColor(.white)
-                    .rotationEffect(textAngle)
-                    .offset(y: -100)
-                    .rotationEffect(.degrees(0))
+                    .rotationEffect(textAngle, anchor: .center)
+                    .offset(y: -radius * 0.4) // 根据扇形半径动态计算文字偏移量
             }
         }
     }
@@ -182,4 +192,4 @@ struct PrizeSlice: View {
 
 #Preview {
     LuckyWheelView()
-} 
+}
