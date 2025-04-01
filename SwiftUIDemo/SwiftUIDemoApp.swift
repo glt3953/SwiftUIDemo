@@ -6,28 +6,18 @@
 //
 
 import SwiftUI
-import SwiftData
+import CoreData
 
 @main
 struct SwiftUIDemoApp: App {
-    var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Item.self,
-        ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
-        do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
-        } catch {
-            fatalError("Could not create ModelContainer: \(error)")
-        }
-    }()
+    // 使用持久化控制器
+    let persistenceController = PersistenceController.shared
 
     var body: some Scene {
         WindowGroup {
             MainTabView()
+                .environment(\.managedObjectContext, persistenceController.container.viewContext)
         }
-        .modelContainer(sharedModelContainer)
     }
 }
 

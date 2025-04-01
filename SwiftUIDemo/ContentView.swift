@@ -6,21 +6,32 @@
 //
 
 import SwiftUI
-import SwiftData
+import CoreData
 
 struct ContentView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
+    @Environment(\.managedObjectContext) private var viewContext
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \Item.timestamp, ascending: true)],
+        animation: .default)
+    private var items: FetchedResults<Item>
+    
+    // 日期格式化器
+    private let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .medium
+        return formatter
+    }()
 
     var body: some View {
-        NavigationSplitView {
+        NavigationView {
             List {
                 ForEach(items) { item in
                     NavigationLink {
-                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
+                        Text("Item at \(dateFormatter.string(from: item.timestamp))")
                             .font(.system(size: 30, weight: .medium))
                     } label: {
-                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
+                        Text(dateFormatter.string(from: item.timestamp))
                             .font(.system(size: 20, weight: .medium))
                     }
                 }
@@ -36,29 +47,45 @@ struct ContentView: View {
                     }
                 }
             }
-        } detail: {
-            Text("Select an item")
+            .navigationTitle("项目列表")
+            
+            // 详情视图的默认内容
+            Text("选择一个项目查看详情")
+                .font(.title)
         }
+        .navigationViewStyle(StackNavigationViewStyle())
     }
 
     private func addItem() {
         withAnimation {
-            let newItem = Item(timestamp: Date())
-            modelContext.insert(newItem)
+            let newItem = Item.createWith(timestamp: Date(), in: viewContext)
+            
+            do {
+                try viewContext.save()
+            } catch {
+                let nsError = error as NSError
+                fatalError("保存失败: \(nsError), \(nsError.userInfo)")
+            }
         }
     }
 
     private func deleteItems(offsets: IndexSet) {
         withAnimation {
-            for index in offsets {
-                modelContext.delete(items[index])
+            offsets.map { items[$0] }.forEach(viewContext.delete)
+
+            do {
+                try viewContext.save()
+            } catch {
+                let nsError = error as NSError
+                fatalError("删除失败: \(nsError), \(nsError.userInfo)")
             }
         }
     }
 }
 
 // UI 热加载
-#Preview {
-    ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView().environment(\.managedObjectContext, PersistenceController(inMemory: true).container.viewContext)
+    }
 }

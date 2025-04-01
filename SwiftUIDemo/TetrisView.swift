@@ -313,6 +313,8 @@ struct NextBlockView: View {
     }
 }
 
-#Preview {
-    TetrisView()
+struct TetrisView_Previews: PreviewProvider {
+    static var previews: some View {
+        TetrisView()
+    }
 } 

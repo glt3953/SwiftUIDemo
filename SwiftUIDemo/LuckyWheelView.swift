@@ -190,6 +190,8 @@ struct PrizeSlice: View {
     }
 }
 
-#Preview {
-    LuckyWheelView()
+struct LuckyWheelView_Previews: PreviewProvider {
+    static var previews: some View {
+        LuckyWheelView()
+    }
 }

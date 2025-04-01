@@ -6,13 +6,21 @@
 //
 
 import Foundation
-import SwiftData
+import CoreData
 
-@Model
-final class Item {
-    var timestamp: Date
+@objc(Item)
+class Item: NSManagedObject, Identifiable {
+    @NSManaged public var timestamp: Date
     
-    init(timestamp: Date) {
-        self.timestamp = timestamp
+    static func fetchRequest() -> NSFetchRequest<Item> {
+        return NSFetchRequest<Item>(entityName: "Item")
+    }
+}
+
+extension Item {
+    static func createWith(timestamp: Date, in context: NSManagedObjectContext) -> Item {
+        let item = Item(context: context)
+        item.timestamp = timestamp
+        return item
     }
 }
