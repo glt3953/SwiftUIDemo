@@ -41,6 +41,10 @@ struct MainTabView: View {
                 NavigationLink(destination: SudokuView()) {
                     Label("数独", systemImage: "square.grid.3x3.fill")
                 }
+                
+                NavigationLink(destination: GoGameView()) {
+                    Label("围棋", systemImage: "circle.grid.cross")
+                }
             }
             .navigationTitle("功能列表")
         }
