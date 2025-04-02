@@ -45,6 +45,10 @@ struct MainTabView: View {
                 NavigationLink(destination: GoGameView()) {
                     Label("围棋", systemImage: "circle.grid.cross")
                 }
+                
+                NavigationLink(destination: GomokuView()) {
+                    Label("五子棋", systemImage: "circle.grid.2x2.fill")
+                }
             }
             .navigationTitle("功能列表")
         }
