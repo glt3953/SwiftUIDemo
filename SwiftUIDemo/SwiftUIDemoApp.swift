@@ -24,26 +24,48 @@ struct SwiftUIDemoApp: App {
 // 主标签视图
 struct MainTabView: View {
     var body: some View {
-        TabView {
-            ContentView()
-                .tabItem {
+        NavigationView {
+            List {
+                NavigationLink(destination: ContentView()) {
                     Label("示例", systemImage: "list.dash")
                 }
-            
-            TetrisView()
-                .tabItem {
+                
+                NavigationLink(destination: TetrisView()) {
                     Label("俄罗斯方块", systemImage: "gamecontroller")
                 }
-            
-            LuckyWheelView()
-                .tabItem {
+                
+                NavigationLink(destination: LuckyWheelView()) {
                     Label("转盘抽奖", systemImage: "circle.fill")
                 }
-            
-            SudokuView()
-                .tabItem {
+                
+                NavigationLink(destination: SudokuView()) {
                     Label("数独", systemImage: "square.grid.3x3.fill")
                 }
+            }
+            .navigationTitle("功能列表")
         }
+        
+        // Tab 入口示例，不能删除
+//        TabView {
+//            ContentView()
+//                .tabItem {
+//                    Label("示例", systemImage: "list.dash")
+//                }
+//            
+//            TetrisView()
+//                .tabItem {
+//                    Label("俄罗斯方块", systemImage: "gamecontroller")
+//                }
+//            
+//            LuckyWheelView()
+//                .tabItem {
+//                    Label("转盘抽奖", systemImage: "circle.fill")
+//                }
+//            
+//            SudokuView()
+//                .tabItem {
+//                    Label("数独", systemImage: "square.grid.3x3.fill")
+//                }
+//        }
     }
 }
