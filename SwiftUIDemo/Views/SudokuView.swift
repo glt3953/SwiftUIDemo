@@ -7,6 +7,12 @@
 
 import SwiftUI
 
+// 单元格位置结构体
+struct CellPosition: Hashable {
+    let row: Int
+    let col: Int
+}
+
 // 数独视图
 struct SudokuView: View {
     // 数独游戏模型
@@ -15,6 +21,7 @@ struct SudokuView: View {
     @State private var showError = false
     @State private var errorMessage = ""
     @State private var showHelpSheet = false
+    @State private var errorCells: Set<CellPosition> = []
     
     // 格子大小
     private let cellSize: CGFloat = min(UIScreen.main.bounds.width, UIScreen.main.bounds.height) / 9 - 4
@@ -33,6 +40,7 @@ struct SudokuView: View {
                                 HStack(spacing: 1) {
                                     ForEach(0..<9) { col in
                                         let isFixed = game.initialBoard[row][col] > 0
+                                        let isError = errorCells.contains(CellPosition(row: row, col: col))
                                         
                                         CellView(
                                             value: game.board[row][col],
@@ -43,7 +51,8 @@ struct SudokuView: View {
                                                 !(row == selectedCell!.row && col == selectedCell!.col),
                                             isSameRow: selectedCell?.row == row,
                                             isSameCol: selectedCell?.col == col,
-                                            isSameBlock: isSameBlock(row: row, col: col, selectedRow: selectedCell?.row, selectedCol: selectedCell?.col)
+                                            isSameBlock: isSameBlock(row: row, col: col, selectedRow: selectedCell?.row, selectedCol: selectedCell?.col),
+                                            isError: isError
                                         )
                                         .frame(width: cellSize, height: cellSize)
                                         .contentShape(Rectangle())
@@ -64,7 +73,7 @@ struct SudokuView: View {
                         .cornerRadius(8)
                         .padding(.horizontal)
                         
-                        Spacer(minLength: 20)
+                        Spacer(minLength: 10)
                         
                         // 数字键盘
                         VStack(spacing: 10) {
@@ -119,7 +128,7 @@ struct SudokuView: View {
                         .padding(.horizontal)
                         
                         // 功能按钮
-                        HStack(spacing: 20) {
+                        HStack(spacing: 10) {
                             // 提示按钮
                             Button(action: {
                                 if let hint = game.getHint() {
@@ -144,7 +153,8 @@ struct SudokuView: View {
                             
                             // 验证按钮
                             Button(action: {
-                                if game.isBoardValid() {
+                                errorCells = game.findInvalidCells()
+                                if errorCells.isEmpty {
                                     if game.isBoardComplete() {
                                         showError = true
                                         errorMessage = "恭喜！您已完成数独游戏！"
@@ -154,7 +164,7 @@ struct SudokuView: View {
                                     }
                                 } else {
                                     showError = true
-                                    errorMessage = "数独无效，请检查您的输入"
+                                    errorMessage = "数独无效，请检查高亮的数字"
                                 }
                             }) {
                                 VStack {
@@ -173,7 +183,7 @@ struct SudokuView: View {
                         
                         Spacer()
                     }
-                    .padding(.vertical, 20)
+                    .padding(.vertical, 10)
                 }
             }
             .navigationTitle("数独游戏")
@@ -236,6 +246,7 @@ struct CellView: View {
     var isSameRow: Bool
     var isSameCol: Bool
     var isSameBlock: Bool
+    var isError: Bool
     
     var body: some View {
         ZStack {
@@ -247,7 +258,7 @@ struct CellView: View {
             if value > 0 {
                 Text("\(value)")
                     .font(.title)
-                    .foregroundColor(isFixed ? .black : .blue)
+                    .foregroundColor(isFixed ? .black : (isError ? .red : .blue))
                     .fontWeight(isFixed ? .bold : .regular)
             }
         }
@@ -255,7 +266,9 @@ struct CellView: View {
     
     // 单元格背景色
     private var backgroundColor: Color {
-        if isSelected {
+        if isError {
+            return Color.red.opacity(0.2)
+        } else if isSelected {
             return Color.blue.opacity(0.3)
         } else if hasSameValue {
             return Color.green.opacity(0.2)
@@ -500,6 +513,82 @@ class SudokuGame: ObservableObject {
         }
         
         return true
+    }
+    
+    // 查找无效的单元格
+    func findInvalidCells() -> Set<CellPosition> {
+        var invalidCells = Set<CellPosition>()
+        
+        // 检查行
+        for row in 0..<9 {
+            var seen = [Int: [CellPosition]]()
+            for col in 0..<9 {
+                let value = board[row][col]
+                if value > 0 {
+                    let position = CellPosition(row: row, col: col)
+                    if seen[value] == nil {
+                        seen[value] = [position]
+                    } else {
+                        seen[value]?.append(position)
+                    }
+                }
+            }
+            for (_, positions) in seen {
+                if positions.count > 1 {
+                    invalidCells.formUnion(positions)
+                }
+            }
+        }
+        
+        // 检查列
+        for col in 0..<9 {
+            var seen = [Int: [CellPosition]]()
+            for row in 0..<9 {
+                let value = board[row][col]
+                if value > 0 {
+                    let position = CellPosition(row: row, col: col)
+                    if seen[value] == nil {
+                        seen[value] = [position]
+                    } else {
+                        seen[value]?.append(position)
+                    }
+                }
+            }
+            for (_, positions) in seen {
+                if positions.count > 1 {
+                    invalidCells.formUnion(positions)
+                }
+            }
+        }
+        
+        // 检查3x3区块
+        for blockRow in 0..<3 {
+            for blockCol in 0..<3 {
+                var seen = [Int: [CellPosition]]()
+                for row in 0..<3 {
+                    for col in 0..<3 {
+                        let actualRow = blockRow * 3 + row
+                        let actualCol = blockCol * 3 + col
+                        let value = board[actualRow][actualCol]
+                        if value > 0 {
+                            let position = CellPosition(row: actualRow, col: actualCol)
+                            if seen[value] == nil {
+                                seen[value] = [position]
+                            } else {
+                                seen[value]?.append(position)
+                            }
+                        }
+                    }
+                }
+                for (_, positions) in seen {
+                    if positions.count > 1 {
+                        invalidCells.formUnion(positions)
+                    }
+                }
+            }
+        }
+        
+        return invalidCells
     }
 }
 
